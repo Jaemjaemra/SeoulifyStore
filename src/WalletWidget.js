@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { getAccountStorageKey } from "./AccountStorage";
 
 export function WalletWidget() {
   const [balance, setBalance] = useState(() => {
-    return parseFloat(localStorage.getItem("seoulify_balance")) || 0.00;
-  });
+  return (
+    parseFloat(
+      localStorage.getItem(getAccountStorageKey("balance"))
+    ) || 0
+  );
+});
 
   const [spoints, setSpoints] = useState(() => {
-    return parseInt(localStorage.getItem("seoulify_spoint")) || 0;
+    return(
+      parseInt(
+        localStorage.getItem(getAccountStorageKey("spoint")),
+        10
+       ) || 0
+      );
   });
 
   const [showTopUpModal, setShowTopUpModal] = useState(false);
@@ -14,8 +24,17 @@ export function WalletWidget() {
 
   useEffect(() => {
     const handleUpdate = () => {
-      const updatedBalance = parseFloat(localStorage.getItem("seoulify_balance")) || 0.00;
-      const updatedSpoints = parseInt(localStorage.getItem("seoulify_spoint")) || 0;
+      const updatedBalance = 
+        parseFloat(
+          localStorage.getItem(getAccountStorageKey("balance")) 
+        ) || 0;
+
+      const updatedSpoints = 
+      parseInt(
+        localStorage.getItem(getAccountStorageKey("spoint")),
+        10
+       ) || 0;
+
       setBalance(updatedBalance);
       setSpoints(updatedSpoints);
     };
@@ -39,7 +58,10 @@ export function WalletWidget() {
 
     const newBalance = balance + amount;
     setBalance(newBalance);
-    localStorage.setItem("seoulify_balance", newBalance.toFixed(2));
+    localStorage.setItem(
+      getAccountStorageKey("balance"),
+      newBalance.toFixed(2)
+    );
     
     window.dispatchEvent(new Event("balanceUpdated"));
 
@@ -119,7 +141,7 @@ export function WalletWidget() {
                   style={styles.cancelBtn} 
                   onClick={() => setShowTopUpModal(false)}
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button type="submit" style={styles.confirmBtn}>
                   Confirm Top Up ✨

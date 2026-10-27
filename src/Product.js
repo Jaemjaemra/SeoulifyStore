@@ -82,7 +82,7 @@ export const products = [
     },
     { 
       id: 11, 
-      name: "NewJeans 1st EP 'New Jeans' Bluebook ver.", 
+      name: "NewJeans 1st EP New Jeans Bluebook ver.", 
       group: "NEWJEANS", 
       price: 54.89, 
       type: "Album", 
@@ -133,7 +133,7 @@ export const products = [
         name: "Layered L/S T-Shirt", 
         group: "LEE SSERAFIRM", 
         price: 259.39, 
-        type: "Mearch", 
+        type: "Merch", 
         image: "https://cdn-contents.weverseshop.io/public/shop/e6422d23defb326ca6339ce45567784e.png?w=720&q=95"
     },
     { 

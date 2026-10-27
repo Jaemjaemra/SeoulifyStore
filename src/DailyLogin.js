@@ -1,31 +1,53 @@
 import React, { useState } from "react";
+import { getAccountStorageKey } from "./AccountStorage";
 
 export default function DailyLogin() {
   const rewards = [1, 1, 1, 3, 1, 1, 21];
 
   const [spoint, setSpoint] = useState(() => {
-    return parseInt(localStorage.getItem("seoulify_spoint")) || 0;
+    return(
+       parseInt(
+      localStorage.getItem(getAccountStorageKey("spoint")),
+        10
+       ) || 0
+      );
   });
 
   const [streak, setStreak] = useState(() => {
-    return parseInt(localStorage.getItem("seoulify_streak")) || 0;
+    return(
+    parseInt(
+      localStorage.getItem(getAccountStorageKey("streak")),
+      10
+    )|| 0
+  );
   });
 
   const [lastClaimDate, setLastClaimDate] = useState(() => {
-    return localStorage.getItem("seoulify_last_claim") || "";
+    return (
+      localStorage.getItem(
+        getAccountStorageKey("last_claim")
+      ) || ""
+    );
   });
 
   const [claimMessage, setClaimMessage] = useState("");
 
   const handleDailyCheckIn = () => {
     const today = new Date().toDateString();
-    
-    if (lastClaimDate === today) return;
+    const lastClaimKey = getAccountStorageKey("last_claim");
+
+    const savedLastClaim = localStorage.getItem(lastClaimKey) || "";
+
+    if (savedLastClaim === today) {
+      setLastClaimDate(today);
+      return;
+    }
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
     let newStreak = streak;
+
     if (lastClaimDate === yesterday.toDateString()) {
       newStreak = (streak + 1) % 7; 
     } else {
@@ -35,14 +57,29 @@ export default function DailyLogin() {
     const earnedPoints = rewards[newStreak];
     const updatedSpoint = spoint + earnedPoints;
 
-    setSpoint(updatedSpoint);
-    setStreak(newStreak);
-    setLastClaimDate(today);
+    console.log({
+  spoint,
+  streak,
+  newStreak,
+  earnedPoints,
+  updatedSpoint,
+});
 
     // Simpan dalam localStorage
-    localStorage.setItem("seoulify_spoint", updatedSpoint);
-    localStorage.setItem("seoulify_streak", newStreak);
-    localStorage.setItem("seoulify_last_claim", today);
+    localStorage.setItem(
+      getAccountStorageKey("spoint"),
+      updatedSpoint
+    );
+    localStorage.setItem(
+      getAccountStorageKey("streak"), 
+      newStreak
+    );
+
+    localStorage.setItem("lastClaimKey, today");
+
+    setSpoint(updatedSpoint); 
+    setStreak(newStreak);
+    setLastClaimDate(today);
 
     // Hantar isyarat (event) supaya WalletWidget di atas tahu data telah berubah
     window.dispatchEvent(new Event("spointUpdated"));

@@ -5,9 +5,11 @@ export default function AccountModal({ isOpen, onClose }) {
   const [isForgotPassword, setIsForgotPassword] = useState(false); // Paparan Lupa Kata Laluan
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [step, setStep] = useState(1); // Langkah 1: Emel, Langkah 2: Kata Laluan
-
+  const [step, setStep] = useState(1); 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   if (!isOpen) return null;
 
   const handleNext = (e) => {
@@ -19,21 +21,60 @@ export default function AccountModal({ isOpen, onClose }) {
     setStep(2);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSignUp) {
-      if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+    if (isSignUp && password !== confirmPassword) {
+        setErrorMessage("Passwords do not match!");
         return;
       }
-      alert(`Seoulify account successfully created for: ${email} ✨`);
-    } else {
-      alert(`Successfully logged in as: ${email} ✨`);
-    }
 
-    localStorage.setItem("seoulify_user", email);
+      setLoading(true);
+      setErrorMessage("");
+
+      try {
+  const endpoint = isSignUp ? "register" : "login";
+
+  const response = await fetch(
+    `http://localhost:8080/api/auth/${endpoint}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: name.trim(),
+        email: email.trim(),
+        password: password,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Something went wrong.");
+  }
+
+  if (isSignUp) {
+    alert("Account created successfully! Please sign in.");
+    setIsSignUp(false);
+    setPassword("");
+    setConfirmPassword("");
+    setStep(1);
+  } else {
+    localStorage.setItem("seoulify_user", data.email);
+    localStorage.setItem("seoulify_userId", data.userId);
+    localStorage.setItem("seoulify_points", data.points);
+
     window.dispatchEvent(new Event("userLoggedIn"));
+    alert(`Successfully logged in as: ${data.email} ✨`);
     handleClose();
+  }
+} catch (error) {
+  setErrorMessage(error.message || "Unable to connect to the server.");
+} finally {
+  setLoading(false);
+}
   };
 
   // Fungsi hantar emel set semula kata laluan
@@ -52,6 +93,8 @@ export default function AccountModal({ isOpen, onClose }) {
     setIsSignUp(false);
     setIsForgotPassword(false);
     setStep(1);
+    setName("");
+    setErrorMessage("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -116,6 +159,7 @@ export default function AccountModal({ isOpen, onClose }) {
             <button 
               type="submit" 
               style={styles.primaryButton}
+              disabled={loading}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
                 e.currentTarget.style.boxShadow = "0 6px 20px rgba(242, 174, 188, 0.4)";
@@ -172,6 +216,23 @@ export default function AccountModal({ isOpen, onClose }) {
         ) : (
           /* PAPARAN 3: MASUKKAN KATA LALUAN */
           <form onSubmit={handleSubmit} style={styles.form}>
+            {isSignUp && (
+            <div style={styles.inputWrapper}>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={styles.inputField}
+              required
+              />
+              </div>
+          )}
+            {errorMessage && (
+  <p style={{ color: "#ff758c", fontSize: "0.8rem" }}>
+    {errorMessage}
+  </p>
+)}
             <p style={{ fontSize: "0.8rem", color: "#8A5A65", textAlign: "center" }}>
               {isSignUp ? "Daftar untuk: " : "Log masuk untuk: "} <strong>{email}</strong>
             </p>
@@ -214,7 +275,11 @@ export default function AccountModal({ isOpen, onClose }) {
                 e.currentTarget.style.backgroundColor = "#F2AEBC";
               }}
             >
-              {isSignUp ? "Sign Up ✨" : "Sign In ✨"}
+              {loading
+              ? "Please wait..."
+              :isSignUp 
+              ? "Sign Up ✨" 
+              : "Sign In ✨"}
             </button>
             <button 
               type="button" 
